@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0ea5e9">
+<title>Kasir UMKM Mantap</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ==================== LAYAR PIN ==================== -->
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-box">
+    <h1>🔒 Kasir UMKM Mantap</h1>
+    <p class="pin-hint">Masukkan PIN 4 angka</p>
+    <input type="password" id="pinInput" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    <div class="pin-dots" id="pinDots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <button class="btn-primary" id="btnPinSubmit" onclick="submitPin()">Masuk</button>
+    <p class="pin-error" id="pinError"></p>
+    <p class="pin-default">PIN default: 1234</p>
+  </div>
+</div>
+
+<!-- ==================== APLIKASI UTAMA ==================== -->
+<div class="app" id="app" style="display:none">
+
+  <!-- HEADER -->
+  <header>
+    <h1 id="storeTitle">Kasir</h1>
+    <div class="bt-status" id="btStatus" onclick="handleBtClick()">
+      <span class="dot"></span>
+      <span id="btText">Printer</span>
+    </div>
+  </header>
+
+  <!-- AREA KONTEN -->
+  <main id="mainArea">
+
+    <!-- ============ TAB KASIR ============ -->
+    <section class="view active" id="view-kasir">
+      <div class="card">
+        <div class="buyer-row">
+          <div class="queue-badge">
+            <div class="lbl">Antrian</div>
+            <div class="num" id="queueNo">001</div>
+          </div>
+          <input type="text" id="buyerName" placeholder="Nama pembeli..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Pilih Produk</div>
+        <div class="product-grid" id="productGrid">
+          <div class="empty">Memuat produk...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Keranjang <span id="cartCount" style="color:#0ea5e9"></span></div>
+        <div id="cartList"><div class="empty">Keranjang kosong</div></div>
+      </div>
+
+      <div style="height:80px"></div>
+    </section>
+
+    <!-- ============ TAB PEMBELIAN ============ -->
+    <section class="view" id="view-pembelian">
+      <div class="card">
+        <div class="card-title">Catat Pembelian (dari supplier)</div>
+        <div class="form-group">
+          <label>Supplier / Toko</label>
+          <input type="text" id="pbSupplier" placeholder="Contoh: Supplier A">
+        </div>
+        <div class="form-group">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="pbCatatan" placeholder="Contoh: Restock mingguan">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Item yang Dibeli</div>
+        <div id="pbItemList"><div class="empty">Belum ada item</div></div>
+        <div class="form-group" style="margin-top:12px">
+          <label>Pilih Produk</label>
+          <select id="pbProdukSelect"></select>
+        </div>
+        <div class="form-group">
+          <label>Qty</label>
+          <input type="number" id="pbQty" placeholder="1" inputmode="numeric" value="1">
+        </div>
+        <div class="form-group">
+          <label>Harga Beli (per pcs)</label>
+          <input type="number" id="pbHarga" placeholder="0" inputmode="numeric">
+        </div>
+        <button class="btn-secondary btn-block" onclick="addPbItem()">+ Tambah ke Daftar</button>
+      </div>
+
+      <div class="card">
+        <div class="total-row">
+          <span>Total Pembelian</span>
+          <strong id="pbTotal">Rp 0</strong>
+        </div>
+        <button class="btn-primary btn-block" style="margin-top:12px" onclick="savePembelian()">Simpan Pembelian</button>
+      </div>
+
+      <div style="height:80px"></div>
+    </section>
+
+    <!-- ============ TAB PRODUK ============ -->
+    <section class="view" id="view-produk">
+      <div class="card">
+        <button class="btn-primary btn-block" onclick="openProductModal()">+ Tambah Produk</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Daftar Produk</div>
+        <div id="produkList"><div class="empty">Memuat...</div></div>
+      </div>
+      <div style="height:80px"></div>
+    </section>
+
+    <!-- ============ TAB RIWAYAT ============ -->
+    <section class="view" id="view-riwayat">
+      <div class="card">
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="semua" onclick="setFilter('semua')">Semua</button>
+          <button class="filter-btn" data-filter="penjualan" onclick="setFilter('penjualan')">Penjualan</button>
+          <button class="filter-btn" data-filter="pembelian" onclick="setFilter('pembelian')">Pembelian</button>
+        </div>
+      </div>
+      <div id="riwayatList"><div class="empty">Memuat...</div></div>
+      <div style="height:80px"></div>
+    </section>
+
+    <!-- ============ TAB PENGATURAN ============ -->
+    <section class="view" id="view-pengaturan">
+      <div class="card">
+        <div class="card-title">Informasi Toko</div>
+        <div class="form-group">
+          <label>Nama Toko</label>
+          <input type="text" id="set_storeName" placeholder="Toko Saya">
+        </div>
+        <div class="form-group">
+          <label>Alamat</label>
+          <input type="text" id="set_storeAddr" placeholder="Jl. Contoh No. 1">
+        </div>
+        <div class="form-group">
+          <label>Footer Struk</label>
+          <input type="text" id="set_footer" placeholder="Terima kasih :)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">QRIS</div>
+        <div class="form-group">
+          <label>String QRIS Statis</label>
+          <textarea id="set_qris" placeholder="00020101..."></textarea>
+          <div class="hint">Tempel string QRIS dari bank/e-wallet Anda</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">PIN Aplikasi</div>
+        <div class="form-group">
+          <label>PIN Baru (4 angka)</label>
+          <input type="text" id="set_pin" maxlength="4" inputmode="numeric" placeholder="1234">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Nomor Antrian</div>
+        <div class="form-group">
+          <label>Nomor saat ini</label>
+          <input type="number" id="set_queue" min="1">
+        </div>
+        <button class="btn-secondary btn-block" onclick="resetQueue()">Reset ke 1</button>
+      </div>
+
+      <div class="card">
+        <button class="btn-primary btn-block" onclick="saveSettings()">💾 Simpan Pengaturan</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Printer Bluetooth</div>
+        <button class="btn-secondary btn-block" onclick="connectPrinter()">Hubungkan Printer</button>
+        <button class="btn-secondary btn-block" style="margin-top:8px" onclick="testPrint()">Test Cetak</button>
+      </div>
+
+      <div style="height:80px"></div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER TOTAL (khusus tab kasir) -->
+  <div class="footer-bar" id="footerBar">
+    <div class="total-box">
+      <div class="lbl">Total</div>
+      <div class="amt" id="grandTotal">Rp 0</div>
+    </div>
+    <button class="btn-success" id="btnBayar" onclick="openPayModal()" disabled>Bayar</button>
+  </div>
+
+  <!-- TAB BAR BAWAH -->
+  <nav class="tabbar">
+    <button class="active" data-view="kasir" onclick="switchView('kasir')">
+      <svg viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 5.5a1 1 0 0 0 .9 1.5h12M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+      Kasir
+    </button>
+    <button data-view="pembelian" onclick="switchView('pembelian')">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Beli
+    </button>
+    <button data-view="produk" onclick="switchView('produk')">
+      <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Produk
+    </button>
+    <button data-view="riwayat" onclick="switchView('riwayat')">
+      <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+      Riwayat
+    </button>
+    <button data-view="pengaturan" onclick="switchView('pengaturan')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Atur
+    </button>
+  </nav>
+
+</div>
+
+<!-- ============ MODAL BAYAR ============ -->
+<div class="modal" id="modalBayar">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Pembayaran</h2>
+      <button class="modal-close" onclick="closeModal('modalBayar')">×</button>
+    </div>
+    <div class="pay-methods">
+      <div class="pay-method active" data-method="cash" onclick="selectPayMethod('cash')">💵 Tunai</div>
+      <div class="pay-method" data-method="qris" onclick="selectPayMethod('qris')">📱 QRIS</div>
+    </div>
+    <div class="summary">
+      <div class="summary-row"><span>Total</span><strong id="payTotal">Rp 0</strong></div>
+    </div>
+    <div id="cashPanel">
+      <div class="form-group">
+        <label>Uang Diterima</label>
+        <input type="number" id="cashInput" placeholder="0" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label>Kembalian</label>
+        <input type="text" id="changeText" readonly value="Rp 0">
+      </div>
+      <div class="quick-cash">
+        <button class="btn-secondary" onclick="fillCash('exact')">Uang Pas</button>
+        <button class="btn-secondary" onclick="fillCash(50000)">50rb</button>
+        <button class="btn-secondary" onclick="fillCash(100000)">100rb</button>
+      </div>
+    </div>
+    <div id="qrisPanel" style="display:none">
+      <div class="qris-box">
+        <div id="qrcode"></div>
+        <p class="qris-hint">Scan QRIS untuk membayar</p>
+      </div>
+    </div>
+    <button class="btn-success btn-block" onclick="confirmPayment()">Konfirmasi & Cetak</button>
+  </div>
+</div>
+
+<!-- ============ MODAL PRODUK ============ -->
+<div class="modal" id="modalProduk">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="produkModalTitle">Tambah Produk</h2>
+      <button class="modal-close" onclick="closeModal('modalProduk')">×</button>
+    </div>
+    <input type="hidden" id="p_id">
+    <div class="form-group">
+      <label>Nama Produk</label>
+      <input type="text" id="p_name" placeholder="Contoh: Kopi Susu">
+    </div>
+    <div class="form-group">
+      <label>Harga Jual</label>
+      <input type="number" id="p_price" placeholder="0" inputmode="numeric">
+    </div>
+    <button class="btn-primary btn-block" onclick="saveProduct()">Simpan</button>
+  </div>
+</div>
+
+<!-- ============ MODAL STRUK ============ -->
+<div class="modal" id="modalStruk">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Transaksi Berhasil</h2>
+      <button class="modal-close" onclick="closeModal('modalStruk')">×</button>
+    </div>
+    <pre id="strukPreview" class="struk-preview"></pre>
+    <button class="btn-success btn-block" onclick="printStruk()">🖨️ Cetak Struk</button>
+    <button class="btn-secondary btn-block" style="margin-top:8px" onclick="closeModal('modalStruk');resetTransaksi()">Selesai</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
